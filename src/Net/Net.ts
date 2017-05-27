@@ -16,7 +16,7 @@ import {
 import Dirty from '../utils/Dirty'
 import { SDKLogger } from '../utils/Logger'
 
-import { QueryToken, SelectorMeta, ProxySelector } from 'reactivedb/proxy'
+import { QueryToken, SelectorMeta, ProxySelector, JoinMode } from 'reactivedb/proxy'
 
 export enum CacheStrategy {
   Request = 200,
@@ -287,18 +287,18 @@ export class Net {
               .mapTo(Array.isArray(v) ? v : [v])
             )
             .do(() => this.requestMap.set(sq, true))
-            .concatMap(() => database.get(tableName, q).selector$)
+            .concatMap(() => database.get(tableName, q, JoinMode.explicit).selector$)
           token = new QueryToken(selector$).map(this.validate(result))
           break
         } else {
-          token = database.get<T>(tableName, q)
+          token = database.get<T>(tableName, q, JoinMode.explicit)
             .map(this.validate(result))
           break
         }
       case CacheStrategy.Cache:
         const selector$ = request
           .concatMap((r: T | T[]) => database.upsert(tableName, r))
-          .concatMap(() => database.get(tableName, q).selector$)
+          .concatMap(() => database.get(tableName, q, JoinMode.explicit).selector$)
         return new QueryToken(selector$)
       default:
         throw new TypeError('unreachable code path')
